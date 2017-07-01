@@ -87,6 +87,18 @@ class FifoDiskQueue(object):
         self.info['size'] -= 1
         self.info['tail'] = [tnum, tcnt, toffset]
         return data
+    
+    def read(self):
+        tnum, tcnt, toffset = self.info['tail']
+        if [tnum, tcnt] >= self.info['head']:
+            return
+        tfd = self.tailf.fileno()
+        szhdr = os.read(tfd, self.szhdr_size)
+        if not szhdr:
+            return
+        size, = struct.unpack(self.szhdr_format, szhdr)
+        data = os.read(tfd, size)
+        return data
 
     def close(self):
         self.headf.close()
